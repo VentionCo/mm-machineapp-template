@@ -154,6 +154,18 @@ class BaseMachineAppEngine(ABC):
         self.__shouldPause  = False                                     # Tells the MachineApp loop that it should pause on its next update
         self.__shouldResume = False                                     # Tells the MachineApp loop that it should resume on its next update
 
+        self.__currentState         = None                              # Active state of the engine
+        self.__stateDictionary      = {}                                # Mapping of state names to MachineAppState definitions
+        self.notifier               = getNotifier()                     # Used to broadcast information to the Web App's console
+        
+    def resetState(self):
+        self.isRunning = False
+        self.__shouldStop = False
+        self.isPaused = False
+        self.__shouldPause = False
+        self.__shouldResume = False
+        self.__hasPausedForStepper  = False 
+        self.__currentState = self.getDefaultState()
 
     @abstractmethod
     def initialize(self):
@@ -292,7 +304,11 @@ class BaseMachineAppEngine(ABC):
                 prevState.onLeave()
                 prevState.freeCallbacks()
 
+<<<<<<< HEAD
         sendNotification(NotificationLevel.APP_STATE_CHANGE, 'Entered MachineApp state: {}'.format(self.__nextRequestedState))
+=======
+        self.notifier.sendMessage(NotificationLevel.APP_STATE_CHANGE, 'Entered MachineApp state: {}'.format(self.__nextRequestedState))
+>>>>>>> master
         self.__currentState = self.__nextRequestedState
         self.__nextRequestedState = None
         nextState = self.getCurrentState()
@@ -321,6 +337,7 @@ class BaseMachineAppEngine(ABC):
         self.initialize()
         self.__stateDictionary = self.buildStateDictionary()
 
+<<<<<<< HEAD
         # Begin the Application by moving to the default state
         self.gotoState(self.getDefaultState())
 
@@ -331,6 +348,17 @@ class BaseMachineAppEngine(ABC):
                 self.__isRunning = False
 
                 self.onStop()
+=======
+        # Outer Loop dealing with e-stops and start functionality
+        while self.__isAlive:
+            if self.__shouldEstop:
+                self.notifier.sendMessage(NotificationLevel.APP_ESTOP, 'Machine is in estop')
+                self.__shouldEstop = False
+
+            if self.__shouldReleaseEstop:
+                self.notifier.sendMessage(NotificationLevel.APP_ESTOP_RELEASE, 'MachineApp estop released')
+                self.__shouldReleaseEstop = False
+>>>>>>> master
 
                 currentState = self.getCurrentState()
                 if currentState != None:
@@ -338,17 +366,30 @@ class BaseMachineAppEngine(ABC):
                 
                 break
 
+<<<<<<< HEAD
             if self.__shouldPause:          # Running pause behavior
                 if self.__hasPausedForStepper:
                     sendNotification(NotificationLevel.APP_PAUSE, 'Paused for stepper mode: Moving from {} state to {} state'.format(self.__currentState, self.__nextRequestedState))
                 else:
                     sendNotification(NotificationLevel.APP_PAUSE, 'MachineApp paused')
+=======
+                self.notifier.sendMessage(NotificationLevel.APP_START, 'MachineApp started')
+>>>>>>> master
 
                 self.__shouldPause = False
                 self.__isPaused = True
 
+<<<<<<< HEAD
                 if not self.__hasPausedForStepper: # Only do pause behavior if we're not doing the stepper-mandated pause
                     self.onPause()
+=======
+            # Inner Loop running the actual MachineApp program
+            while self.isRunning:
+                if self.__shouldEstop:          # Running E-Stop behavior
+                    self.notifier.sendMessage(NotificationLevel.APP_ESTOP, 'Machine is in estop')
+                    self.__shouldEstop = False
+                    self.isRunning = False
+>>>>>>> master
 
                     currentState = self.getCurrentState()
                     if currentState != None:
@@ -364,15 +405,69 @@ class BaseMachineAppEngine(ABC):
 
                     currentState = self.getCurrentState()
                     if currentState != None:
+<<<<<<< HEAD
                         currentState.onResume()
+=======
+                        currentState.onStop()
+
+                    break
+
+                if self.__shouldPause:          # Running pause behavior
+                    if self.__hasPausedForStepper:
+                        self.notifier.sendMessage(NotificationLevel.APP_PAUSE, 'Paused for stepper mode: Moving from {} state to {} state'.format(self.__currentState, self.__nextRequestedState))
+                    else:
+                        self.notifier.sendMessage(NotificationLevel.APP_PAUSE, 'MachineApp paused')
+
+                    self.__shouldPause = False
+                    self.isPaused = True
+
+                    if not self.__hasPausedForStepper: # Only do pause behavior if we're not doing the stepper-mandated pause
+                        self.onPause()
+
+                        currentState = self.getCurrentState()
+                        if currentState != None:
+                            currentState.onPause()
+
+                if self.__shouldResume:         # Running resume behavior
+                    self.notifier.sendMessage(NotificationLevel.APP_RESUME, 'MachineApp resumed')
+                    self.__shouldResume = False
+                    self.isPaused = False
+
+                    if not self.__hasPausedForStepper: # Only do resume behavior if we're not doing the stepper-mandated pause
+                        currentState = self.getCurrentState()
+                        if currentState != None:
+                            currentState.onResume()
+
+                if self.isPaused:               # While paused, don't do anything
+                    time.sleep(BaseMachineAppEngine.UPDATE_INTERVAL_SECONDS)
+                    continue
+
+                if self.__nextRequestedState != None:       # Running state transition behavior
+                    if self.__tryExecuteStateTransition():
+                        continue # If the transition is executed successfully, let's get a clean update loop
+
+                currentState = self.getCurrentState()
+                if currentState == None:
+                    self.logger.error('Currently in an invalid state')
+                    continue
+
+                currentState.updateCallbacks()
+                currentState.update()
+>>>>>>> master
 
             if self.__isPaused:               # While paused, don't do anything
                 time.sleep(BaseMachineAppEngine.UPDATE_INTERVAL_SECONDS)
                 continue
 
+<<<<<<< HEAD
             if self.__nextRequestedState != None:       # Running state transition behavior
                 if self.__tryExecuteStateTransition():
                     continue # If the transition is executed successfully, let's get a clean update loop
+=======
+            self.logger.info('Exiting MachineApp loop')
+            self.notifier.sendMessage(NotificationLevel.APP_COMPLETE, 'MachineApp completed')
+            self.afterRun()
+>>>>>>> master
 
             currentState = self.getCurrentState()
             if currentState == None:
