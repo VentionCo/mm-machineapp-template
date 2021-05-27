@@ -4,6 +4,7 @@ from threading import RLock, Thread
 import logging
 import json
 import time
+from internal.interprocess_message import sendSubprocessToParentMsg, SubprocessToParentMessage
 
 class NotificationLevel:
     ''' 
@@ -23,9 +24,34 @@ class NotificationLevel:
     ERROR               = 'error'
     IO_STATE            = 'io_state'
 
+def sendNotification(level, message, customPayload=None):
+    '''
+        Broadcast a message to all connected clients
+
+        params:
+            level: str
+                Notification level defines how the data is visualized on the client
+            message: str
+                message to be shown on the client
+            customPayload: dict
+                (Optional) Custom data to be sent to the client, if any
+    '''
+    sendSubprocessToParentMsg(SubprocessToParentMessage.NOTIFICATION, {
+        "timeSeconds": time.time(),
+        "level": level,
+        "message": message,
+        "customPayload": customPayload
+    })
+
 
 class Notifier:
-    ''' Websocket server used to stream information about a run in progress to the web client '''
+
+    ''' 
+    Websocket server used to stream information about a run in progress to the web client
+
+    For internal use only! If you plan to send notifications 
+    
+    '''
     def __init__(self):
         self.__logger = logging.getLogger(__name__)
         self.lock = RLock()
@@ -42,12 +68,12 @@ class Notifier:
         self.server = websockets.serve(self.handler, ip, port)
         self.clients = set()
         
-        self.__logger.info('Websocket loop exiting.')
         asyncio.get_event_loop().create_task(self.run())
         asyncio.get_event_loop().run_until_complete(self.server)
         asyncio.get_event_loop().run_forever()
 
     async def handler(self, websocket, path):
+        self.__logger.info('Received new client.')
         self.clients.add(websocket)
         try:
             while True:
@@ -82,6 +108,7 @@ class Notifier:
             
     def setDead(self):
         self.isRunning = False
+        self.__logger.info('Websocket server set to die')
 
     def sendMessage(self, level, message, customPayload=None):
         '''

@@ -194,7 +194,7 @@
     function connectToSocket() {
         const lWebsocketConnName = `ws://${window.location.hostname}:8081`;
         console.log('Connecting to socket at ' + lWebsocketConnName);
-        lWebsocketConnection = new WebSocket(lWebsocketConnName);
+        lWebsocketConnection = new WebSocket(lWebsocketConnName,);
         lWebsocketConnection.onopen = function(pEvent) {
             console.log('Websocket is online');
         };
@@ -230,6 +230,7 @@
     }
 
     function onUpdateMessageReceived(pMessageData) {
+        console.log(pMessageData);
         const lTimeSeconds = pMessageData.timeSeconds,
             lLevel = pMessageData.level,
             lMessageStr = pMessageData.message,
@@ -271,6 +272,13 @@
             case 'app_estop_set': {
                 addMessageToConsole('fa fa-info-circle', lTimeSeconds, lMessageStr);
                 onEstopSet();
+
+                if (lState === 'running' || lState === 'paused') {
+                    $('#run-start-button').empty().append($('<span>').addClass('fa fa-play')).append($('<div>').text('START')).removeClass('running');
+                    $('#run-stop-button').removeClass('running').empty().append($('<span>').addClass('fa fa-stop')).append($('<div>').text('STOP'));
+                    $('#run-debug-button').removeAttr('disabled');
+                    lState = 'idle';
+                }
                 break;
             }
             case 'app_estop_release': {
@@ -344,15 +352,16 @@
         const lRunDebugButton = $('#run-debug-button').on('click', function() {
             switch (lState) {
                 case 'idle': {
-                    lRunStartButton.empty();
-                    lRunStartButton.append($('<div>').addClass('widget-spin-loader'));
+                    const lPreviousElementContents = lRunDebugButton.html()
+                    lRunDebugButton.empty();
+                    lRunDebugButton.append($('<div>').addClass('widget-spin-loader'));
                     lStartMachineApp(lRunTimeConfiguration, true).then(function(pSuccess) {
                         if (pSuccess) {
                             console.log('Successfully started the MachineApp');
                         } else {
                             console.error('Failed to start the MachineApp');
-                            $('#run-start-button').empty().html(lPreviousElementContents);
                         }
+                        lRunDebugButton.empty().html(lPreviousElementContents);
                     });
                     break;
                 }
