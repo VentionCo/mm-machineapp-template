@@ -154,18 +154,6 @@ class BaseMachineAppEngine(ABC):
         self.__shouldPause  = False                                     # Tells the MachineApp loop that it should pause on its next update
         self.__shouldResume = False                                     # Tells the MachineApp loop that it should resume on its next update
 
-        self.__currentState         = None                              # Active state of the engine
-        self.__stateDictionary      = {}                                # Mapping of state names to MachineAppState definitions
-        self.notifier               = getNotifier()                     # Used to broadcast information to the Web App's console
-        
-    def resetState(self):
-        self.isRunning = False
-        self.__shouldStop = False
-        self.isPaused = False
-        self.__shouldPause = False
-        self.__shouldResume = False
-        self.__hasPausedForStepper  = False 
-        self.__currentState = self.getDefaultState()
 
     @abstractmethod
     def initialize(self):
