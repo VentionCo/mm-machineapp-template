@@ -348,7 +348,7 @@ class MachineMotion:
         self.areSmartDrivesReady = None
 
         # MQTT
-		self.mqttCallbacks = []                         # Custom MachineApp template variable
+        self.mqttCallbacks = []                         # Custom MachineApp template variable
         self.myMqttClient = None
         self.myMqttClient = mqtt.Client()
         self.myMqttClient.on_connect = self.__onConnect
@@ -366,7 +366,7 @@ class MachineMotion:
         self.mech_gain = ["Axis 0 does not exist", "notInitialized", "notInitialized", "notInitialized", "notInitialized"]
         self.direction = ["Axis 0 does not exist", "notInitialized", "notInitialized", "notInitialized", "notInitialized"]
 
-		self.__registeredInputMap = {}                      # Custom MachineApp template variable
+        self.__registeredInputMap = {}                      # Custom MachineApp template variable
 
         return
 
