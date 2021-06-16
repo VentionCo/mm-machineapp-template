@@ -15,6 +15,7 @@ from internal.interprocess_message import SubprocessToParentMessage
 from machine_app import MachineAppEngine
 import paho.mqtt.subscribe as MQTTsubscribe
 import paho.mqtt.client as mqtt
+import traceback
 
 class RestServer(Bottle):
     '''
@@ -26,8 +27,9 @@ class RestServer(Bottle):
         self.__clientDirectory = os.path.join('..', 'client')
         self.__serverDirectory = os.path.join('.')
         self.__logger = logging.getLogger(__name__)
+        self.__notifier = getNotifier()
         self.__subprocess = MachineAppSubprocessManager()
-        self.__estopManager = EstopManager()
+        self.__estopManager = EstopManager(self.onEstopEntered)
         self.isPaused = False                   # TODO: It would be better to no track isPaused here
 
         # Set up callbacks
@@ -97,14 +99,7 @@ class RestServer(Bottle):
     # TODO: All E-Stop functionality should be handles on this process
     def estop(self):
         if self.__estopManager.estop():
-            self.__subprocess.terminate()
-            self.isPaused = False
-
-            # Create a temporary MachineAppEngine and call onEstop
-            temporaryApp = MachineAppEngine()
-            temporaryApp.initialize()
-            temporaryApp.onEstop()
-
+            self.onEstopEntered()
             return 'OK'
         else:
             abort(400, 'Failed to estop the MachineApp')
@@ -135,6 +130,19 @@ class RestServer(Bottle):
         os.kill(os.getpid(), signal.SIGTERM)
         return 'OK'
 
+    def onEstopEntered(self):
+        try:
+            if self.__subprocess.isRunning():
+                self.__subprocess.terminate()
+                self.isPaused = False
+                
+                # Create a temporary MachineAppEngine and call onEstop
+                temporaryApp = MachineAppEngine()
+                temporaryApp.initialize()
+                temporaryApp.onEstop()
+        except Exception as e:
+            self.__notifier.sendMessage(NotificationLevel.ERROR, "Failed to run onEstop behavior: %s (%s)" % (traceback.format_exc(), e))
+
 class MQTTPATHS :
     ESTOP = "estop"
     ESTOP_STATUS = ESTOP + "/status"
@@ -152,7 +160,8 @@ class EstopManager:
     Small class that subscribes/publishes to MQTT eStop events 
     to control the current state of the estop.
     '''
-    def __init__(self):
+    def __init__(self, onEstopEntered):
+        self.__onEstopEntered = onEstopEntered
         self.__isEstopped = False
         self.__notifier = getNotifier()
         self.__mqttClient = mqtt.Client()
@@ -178,6 +187,7 @@ class EstopManager:
 
                 if self.__isEstopped:
                     self.__notifier.sendMessage(NotificationLevel.APP_ESTOP, 'Machine is in estop')
+                    self.__onEstopEntered()
                 else:
                     self.__notifier.sendMessage(NotificationLevel.APP_ESTOP_RELEASE, 'Estop Released')
 
