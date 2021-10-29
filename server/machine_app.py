@@ -182,7 +182,10 @@ class GreenLightState(MachineAppState):
                 self.engine.nextLightDirection = 'vertical' if self.__direction == 'horizontal' else 'horizontal'
                 self.gotoState(self.__direction + '_yellow')
 
+        # Register to listen to the hardware IO (like a push button)...
         self.registerCallback(self.engine.primaryMachineMotion, 'push_button_1', __onPedestrianButtonClicked)
+        # Or register to listern to the software IO (like a button in your web page)!
+        self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'my_custom_topic/push_button_1', __onPedestrianButtonClicked)
 
         # Set the axis moving
         self.__machineMotion.setContinuousMove(self.__axis, self.__speed)

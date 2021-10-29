@@ -120,6 +120,12 @@ function textbox(pLabel, pValue, pOnChange) {
      selectInput.trigger('change');
  }
 
+ function button(pLabel, pOnClick) {
+    const lWrapper = $('<button>').on('click', pOnClick).text(pLabel).addClass('widget-button');
+
+    return lWrapper;
+ }
+
  /**
   * Display an error on any of the widgets
   * @param {JQuery<HTMLElement>} pWidget 

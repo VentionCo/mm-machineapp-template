@@ -37,7 +37,14 @@ def run():
             logging.info(stdinResult)
             try:
                 message = json.loads(stdinResult)
-                if not 'request' in message:
+
+                if 'topic' in message:
+                    if 'message' in message:
+                        machineApp.receiveMessage(message['topic'], message['message'])
+                    else:
+                        machineApp.receiveMessage(message['topic'], '')
+                    continue
+                elif not 'request' in message:
                     logging.warning('Malformed message from subprocess: {}'.format(stdinResult))
                     continue
 

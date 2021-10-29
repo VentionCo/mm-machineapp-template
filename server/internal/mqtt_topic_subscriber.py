@@ -27,6 +27,9 @@ class MqttTopicSubscriber:
         with self.__lock:
             self.__queue.append((topic, msg))
 
+    def addToQueue(self, topic, message):
+        self.__mqttEventCallback(topic, message)
+
     def registerCallback(self, topic, callback):
         ''' 
         Register a callback for a particular topic. Note that you should call removeCallback

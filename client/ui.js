@@ -64,7 +64,27 @@ function onNotificationReceived(pLevel, pMessageStr, pMessagePayload) {
         lCustomContainer.empty();
     } else if (pLevel === 'app_start') { // Refresh the custom container when we start the app
         lCustomContainer.empty();
-        const lHorizontalDistanceTravelled = $('<div>').addClass('distance-travelled-container')
+        const lRequestWalkButton = button('Request Pedestrian Crossing', function() {
+                var lMessage = { topic: 'my_custom_topic/push_button_1', message: 'true' };
+                fetch('/run/message', { 
+                    method: 'POST', 
+                    body: JSON.stringify(lMessage),
+                    headers: {
+                        'Accept': 'application/json, text/plain, */*',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(function(pResponse) {
+                    if (pResponse.status === 200) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }).catch(function(pReason) {
+                    console.exception('Failed to process request', pReason);
+                    return false;
+                });
+            }).appendTo(lCustomContainer),
+            lHorizontalDistanceTravelled = $('<div>').addClass('distance-travelled-container')
                 .append($('<label>').text('Horizontal Distance Travelled'))
                 .append($('<span>').text('0 m'))
                 .appendTo(lCustomContainer),
