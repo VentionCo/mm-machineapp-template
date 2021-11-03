@@ -15,7 +15,7 @@ that you have a good idea of whether or not your application properly builds.
 if env.IS_DEVELOPMENT:
     from internal.fake_machine_motion import MachineMotion
 else:
-    from internal.machine_motion import MachineMotion
+    from internal.machine_motion import MachineMotion, MACHINEMOTION_HW_VERSIONS
 
 class MachineAppEngine(BaseMachineAppEngine):
     ''' Manages and orchestrates your MachineAppStates '''
@@ -54,7 +54,7 @@ class MachineAppEngine(BaseMachineAppEngine):
             str
         '''
         return 'homing'
-    
+ 
     def initialize(self):
         ''' 
         Called when you press play in the UI.
@@ -66,25 +66,14 @@ class MachineAppEngine(BaseMachineAppEngine):
         self.logger.info('Running initialization')
         
         # Create and configure your machine motion instances
-        self.primaryMachineMotion = MachineMotion('127.0.0.1')
-        self.primaryMachineMotion.configAxis(1, 8, 250)
-        self.primaryMachineMotion.configAxis(2, 8, 250)
-        self.primaryMachineMotion.configAxis(3, 8, 250)
-        self.primaryMachineMotion.configAxisDirection(1, 'positive')
-        self.primaryMachineMotion.configAxisDirection(2, 'positive')
-        self.primaryMachineMotion.configAxisDirection(3, 'positive')
+        self.primaryMachineMotion = MachineMotion('127.0.0.1', machineMotionHwVersion=MACHINEMOTION_HW_VERSIONS.MMv2)
+        self.primaryMachineMotion.configAxis_v2(1, 150, "positive", 5, "closed", 2, "default")
+        self.primaryMachineMotion.configAxis_v2(2, 150, "positive", 5, "closed", 2, "default")
+        self.primaryMachineMotion.configAxis_v2(3, 150, "positive", 5, "closed", 2, "default")
         self.primaryMachineMotion.registerInput('push_button_1', 1, 1)  # Register an input with the provided name
 
         self.primaryIoMonitor = IOMonitor(self.primaryMachineMotion)
         self.primaryIoMonitor.startMonitoring('push_button_1', True, 1, 1)
-
-        self.secondaryMachineMotion = MachineMotion('127.0.0.1')
-        self.secondaryMachineMotion.configAxis(1, 8, 250)
-        self.secondaryMachineMotion.configAxis(2, 8, 250)
-        self.secondaryMachineMotion.configAxis(3, 8, 250)
-        self.secondaryMachineMotion.configAxisDirection(1, 'positive')
-        self.secondaryMachineMotion.configAxisDirection(2, 'positive')
-        self.secondaryMachineMotion.configAxisDirection(3, 'positive')
     
         # Setup your global variables
         self.isPedestrianButtonTriggered = False
@@ -96,7 +85,6 @@ class MachineAppEngine(BaseMachineAppEngine):
         simply call 'emitStop' on all of your machine motions in this methiod.
         '''
         self.primaryMachineMotion.emitStop()
-        self.secondaryMachineMotion.emitStop()
 
     def onPause(self):
         '''
@@ -104,7 +92,6 @@ class MachineAppEngine(BaseMachineAppEngine):
         simply call 'emitStop' on all of your machine motions in this methiod.
         '''
         self.primaryMachineMotion.emitStop()
-        self.secondaryMachineMotion.emitStop()
 
     def onEstop(self):
         '''
@@ -161,7 +148,7 @@ class GreenLightState(MachineAppState):
         self.__direction            = direction
         self.__speed                = self.configuration['fullSpeed']
         self.__durationSeconds      = self.configuration['greenTimer']
-        self.__machineMotion        = self.engine.primaryMachineMotion if self.__direction == 'horizontal' else self.engine.secondaryMachineMotion
+        self.__machineMotion        = self.engine.primaryMachineMotion
         self.__axis                 = 2 if self.__direction == 'vertical' else 1
 
     def onEnter(self):
@@ -186,6 +173,7 @@ class GreenLightState(MachineAppState):
 
         # Set the axis moving
         self.__machineMotion.setContinuousMove(self.__axis, self.__speed)
+        sendNotification(NotificationLevel.INFO, 'Green light with axis={}, speed={}'.format(self.__axis, self.__speed))
 
     def update(self):   # This method gets called every 0.16 seconds
         if time.time() - self.__startTimeSeconds >= self.__durationSeconds:
@@ -211,7 +199,7 @@ class YellowLightState(MachineAppState):
         self.__direction            = direction
         self.__speed                = self.configuration['slowSpeed']
         self.__durationSeconds      = self.configuration['yellowTimer']
-        self.__machineMotion        = self.engine.primaryMachineMotion if self.__direction == 'horizontal' else self.engine.secondaryMachineMotion
+        self.__machineMotion        = self.engine.primaryMachineMotion
         self.__axis                 = 2 if self.__direction == 'vertical' else 1
 
     def onEnter(self):
