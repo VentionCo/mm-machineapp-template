@@ -10,7 +10,7 @@ The purpose of this project is to provide users with a framework upon which they
 1. Clone the repository to a new directory on your machine
 2. Download Python 3.5 (https://www.python.org/downloads/)
 3. Run `python --version` or `python3 --version` in the commandline to check that you have installed properly
-4. Install server dependencies by running `cd server && pip install -r requirements.txt` (See `requirements.txt` to view the external libraries that the server relies on)
+4. Install server dependencies by running `cd server && pip install -r requirements.txt` (You may need to use `pip3` instead of `pip`, depending on how your paths were set up) (See `requirements.txt` to view the external libraries that the server relies on)
 5. Run the server using `cd server && python app.py` (You may need to use `python3` or event `python35` instead of python, depending on how your paths were set up)
 6. Start hacking! The project is now all yours to play around with. I recommend reading the [documentation](./docs/getting_started.md) before going any further.
 

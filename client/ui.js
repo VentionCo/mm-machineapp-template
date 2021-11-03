@@ -5,8 +5,8 @@
  */
 function getDefaultConfiguration() {
     return {
-        fullSpeed: 15,
-        slowSpeed: 10,
+        fullSpeed: 150,
+        slowSpeed: 100,
         greenTimer: 10,
         yellowTimer: 2,
         redTimer: 2,
