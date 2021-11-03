@@ -49,6 +49,34 @@ function buildEditor(pConfiguration) {
 }
 
 /**
+ * Helper function that publishes a message to the python server while the application
+ * is executing.
+ *  
+ * @param {String} pTopic Topic to publish to 
+ * @param {String} pMessage Message to publish to that topic 
+ */
+function sendSoftwareMessage(pTopic, pMessage) {
+    var lMessage = { topic: pTopic, message: pMessage };
+    fetch('/run/message', { 
+        method: 'POST', 
+        body: JSON.stringify(lMessage),
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+        }
+    }).then(function(pResponse) {
+        if (pResponse.status === 200) {
+            return true;
+        } else {
+            return false;
+        }
+    }).catch(function(pReason) {
+        console.exception('Failed to process request', pReason);
+        return false;
+    });
+}
+
+/**
  * Message received from the Notifier on the backend
  * @param {NotificationLevel} pLevel
  * @param {string} pMessageStr 
@@ -64,26 +92,7 @@ function onNotificationReceived(pLevel, pMessageStr, pMessagePayload) {
         lCustomContainer.empty();
     } else if (pLevel === 'app_start') { // Refresh the custom container when we start the app
         lCustomContainer.empty();
-        const lRequestWalkButton = button('Request Pedestrian Crossing', function() {
-                var lMessage = { topic: 'my_custom_topic/push_button_1', message: 'true' };
-                fetch('/run/message', { 
-                    method: 'POST', 
-                    body: JSON.stringify(lMessage),
-                    headers: {
-                        'Accept': 'application/json, text/plain, */*',
-                        'Content-Type': 'application/json'
-                    }
-                }).then(function(pResponse) {
-                    if (pResponse.status === 200) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }).catch(function(pReason) {
-                    console.exception('Failed to process request', pReason);
-                    return false;
-                });
-            }).appendTo(lCustomContainer),
+        const lRequestWalkButton = button('Request Pedestrian Crossing', function() { sendSoftwareMessage('software_button', 'true'); }).appendTo(lCustomContainer),
             lHorizontalDistanceTravelled = $('<div>').addClass('distance-travelled-container')
                 .append($('<label>').text('Horizontal Distance Travelled'))
                 .append($('<span>').text('0 m'))

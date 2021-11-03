@@ -185,7 +185,7 @@ class GreenLightState(MachineAppState):
         # Register to listen to the hardware IO (like a push button)...
         self.registerCallback(self.engine.primaryMachineMotion, 'push_button_1', __onPedestrianButtonClicked)
         # Or register to listern to the software IO (like a button in your web page)!
-        self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'my_custom_topic/push_button_1', __onPedestrianButtonClicked)
+        self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'software_button', __onPedestrianButtonClicked)
 
         # Set the axis moving
         self.__machineMotion.setContinuousMove(self.__axis, self.__speed)
