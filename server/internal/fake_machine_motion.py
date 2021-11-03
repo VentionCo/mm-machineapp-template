@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.subscribe as MQTTsubscribe
 
 class MachineMotion:
-    def __init__(self, ip):
+    def __init__(self, ip, machineMotionHwVersion=1):
         self.ip = ip
         self.current_position = {
             1: 0,
@@ -56,6 +56,10 @@ class MachineMotion:
         pass
 
     def configAxis(self, axis, uStep, mechGain):
+        pass
+
+
+    def configAxis_v2(self, drives, mechGain, directions, motorCurrent, loop, microSteps, tuningProfile, _parent=None):
         pass
 
     def triggerEstop(self):
