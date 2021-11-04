@@ -93,14 +93,6 @@ function onNotificationReceived(pLevel, pMessageStr, pMessagePayload) {
     } else if (pLevel === 'app_start') { // Refresh the custom container when we start the app
         lCustomContainer.empty();
         const lRequestWalkButton = button('Request Pedestrian Crossing', function() { sendSoftwareMessage('software_button', 'true'); }).appendTo(lCustomContainer),
-            lHorizontalDistanceTravelled = $('<div>').addClass('distance-travelled-container')
-                .append($('<label>').text('Horizontal Distance Travelled'))
-                .append($('<span>').text('0 m'))
-                .appendTo(lCustomContainer),
-            lVerticalDistancedTravelled = $('<div>').addClass('distance-travelled-container')
-                .append($('<label>').text('Vertical Distance Travelled'))
-                .append($('<span>').text('0 m'))
-                .appendTo(lCustomContainer),
             lLightContainer = $('<div>').addClass('h_layout').appendTo(lCustomContainer),
             lCreateLightIndicator = function(pName) {
                 const lLightIndicator = $('<div>').addClass('v_layout').addClass('light-container'),
