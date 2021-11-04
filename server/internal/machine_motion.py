@@ -1,4 +1,5 @@
 # File name:            MachineMotion.py                            #
+# Version:              4.3                                         #
 # Note:                 Information about all the g-Code            #
 #                       commands supported are available at         #
 #                       the following location of the SDK:          #
@@ -187,6 +188,8 @@ def HTTPSend(host, path, data=None, JsonResponse=False, JsonRequest=False, timeo
 # @status
 #
 class GCode:
+    '''skip
+    '''
     #
     # Class constructor
     # PRIVATE
@@ -310,7 +313,10 @@ class GCode:
 # Class used to encapsulate the MachineMotion controller
 # @status
 #
-class MachineMotion:
+class MachineMotion(object):
+    '''z-index:100
+    '''
+
     # Version independent MQTT parser
     def __parseMessage(self, message, jsonLoads=True):
         # Decode the payload according to the Python version
@@ -445,7 +451,7 @@ class MachineMotion:
             accel:
                 desc: Acceleration used to reach the desired speed, in mm / sec^2
                 type: Number
-        compatibility: MachineMotion v1 and MachineMotion v2.
+        compatibility: MachineMotion v1 and MachineMotion v2, software version 2.3.0 and newer.
         exampleCodePath: moveContinuous.py
         '''
 
@@ -454,14 +460,16 @@ class MachineMotion:
         if not self._isNumber(speed) : raise Exception('Error in speed variable type')
         if not self._isNumber(accel) : raise Exception('Error in accel variable type')
 
-        # Check if steps_per_mm are defined locally. If not, query them.
-        if not self._isNumber(self.steps_mm[axis]) :
-            self.populateStepsPerMm()
+        if self.isMMv2:
+            gCode = "V7 S" + str(speed) + " A" + str(abs(accel)) + " " + self.myGCode.__getTrueAxis__(axis)
+        else:
+            # Check if steps_per_mm are defined locally. If not, query them.
+            if not self._isNumber(self.steps_mm[axis]) :
+                self.populateStepsPerMm()
 
-        # Send speed command with accel
-        gCode = "V4 S" + str(speed * self.steps_mm[axis]) + " A" + str(abs(accel * self.steps_mm[axis])) + " " + self.myGCode.__getTrueAxis__(axis)
+            # Send speed command with accel
+            gCode = "V4 S" + str(speed * self.steps_mm[axis]) + " A" + str(abs(accel * self.steps_mm[axis])) + " " + self.myGCode.__getTrueAxis__(axis)
         self.myGCode.__emitEchoOk__(gCode)
-
         return
 
     def stopMoveContinuous(self, axis, accel) :
@@ -553,6 +561,8 @@ class MachineMotion:
         return True
 
     def populateStepsPerMm(self,onlyMarlin=False):
+        if self.isMMv2:
+            raise Exception('function populateStepsPerMm is not supported by MachineMotion v2.')
         # For axes 1,2,3 ask directly from Marlin
         reply_M503 = self.myGCode.__emitEchoOk__("M503")
         beginning = reply_M503.find('M92')
@@ -562,19 +572,6 @@ class MachineMotion:
         self.direction[1] = DIRECTION.NORMAL if self.steps_mm[1]>0 else DIRECTION.REVERSE
         self.direction[2] = DIRECTION.NORMAL if self.steps_mm[2]>0 else DIRECTION.REVERSE
         self.direction[3] = DIRECTION.NORMAL if self.steps_mm[3]>0 else DIRECTION.REVERSE
-
-        # Ask the 4th one (if relevant) to the smartDrives
-        if self.isMMv2 and not onlyMarlin and not self.isMMv2OneDrive:
-            reply = self.myGCode.__askConfigToSmartDrives__(4)
-            if ( "Error" in str(reply) ) : # str() encoding is necessary for Python3
-                raise Exception('Error in gCode execution')
-            else :
-                parsedReply = self.__parseMessage(reply)
-                self.mech_gain[4]   = parsedReply['gain']
-                self.u_step[4]      = parsedReply['microSteps']
-                self.direction[4]   = parsedReply['direction']
-                self.steps_mm[4]    = self.deduce_steps_per_mm(self.mech_gain[4], self.u_step[4], self.direction[4])
-
         return
 
     def deduce_steps_per_mm(self, mech_gain, u_step, direction) :
@@ -2206,7 +2203,7 @@ class MachineMotion:
                 return False
 
         return False
-
+        
     # Custom MachineApp template-specific code
     def addMqttCallback(self, func):
         if not func in self.mqttCallbacks:
@@ -2225,6 +2222,8 @@ class MachineMotion:
         return self.__registeredInputMap[name]
 
 class MachineMotionV2(MachineMotion):
+    '''z-index:99
+    '''
     def __init__(self, machineIp=DEFAULT_IP_ADDRESS.usb_windows):
         '''
         desc: Constructor of MachineMotionV2 class
@@ -2235,10 +2234,12 @@ class MachineMotionV2(MachineMotion):
         compatibility: MachineMotion v2.
         exampleCodePath: moveRelative.py
         '''
-        super().__init__(machineIp,
+        super(MachineMotionV2, self).__init__(machineIp,
                          machineMotionHwVersion=MACHINEMOTION_HW_VERSIONS.MMv2)
 
 class MachineMotionV2OneDrive(MachineMotion):
+    '''z-index:98
+    '''
     def __init__(self, machineIp=DEFAULT_IP_ADDRESS.usb_windows):
         '''
         desc: Constructor of MachineMotionV2OneDrive class
@@ -2249,7 +2250,7 @@ class MachineMotionV2OneDrive(MachineMotion):
         compatibility: MachineMotion v2 One Drive.
         exampleCodePath: oneDriveControl.py
         '''
-        super().__init__(machineIp,
+        super(MachineMotionV2OneDrive, self).__init__(machineIp,
                          machineMotionHwVersion=MACHINEMOTION_HW_VERSIONS.MMv2OneDrive)
 
 

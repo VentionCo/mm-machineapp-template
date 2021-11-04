@@ -12,10 +12,11 @@ If we are in development mode (i.e. running locally), we initialize a mocked ins
 This fake MachineMotion interface is used ONLY when developing locally on your own machine motion, so
 that you have a good idea of whether or not your application properly builds.
 ''' 
+from internal.machine_motion import MACHINEMOTION_HW_VERSIONS
 if env.IS_DEVELOPMENT:
     from internal.fake_machine_motion import MachineMotion
 else:
-    from internal.machine_motion import MachineMotion, MACHINEMOTION_HW_VERSIONS
+    from internal.machine_motion import MachineMotion
 
 class MachineAppEngine(BaseMachineAppEngine):
     ''' Manages and orchestrates your MachineAppStates '''
@@ -169,7 +170,10 @@ class GreenLightState(MachineAppState):
                 self.engine.nextLightDirection = 'vertical' if self.__direction == 'horizontal' else 'horizontal'
                 self.gotoState(self.__direction + '_yellow')
 
+        # Register to listen to the hardware IO (like a push button)...
         self.registerCallback(self.engine.primaryMachineMotion, 'push_button_1', __onPedestrianButtonClicked)
+        # Or register to listern to the software IO (like a button in your web page)!
+        self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'software_button', __onPedestrianButtonClicked)
 
         # Set the axis moving
         self.__machineMotion.setContinuousMove(self.__axis, self.__speed)

@@ -45,6 +45,7 @@ class RestServer(Bottle):
         self.route('/run/releaseEstop', method='POST', callback=self.releaseEstop)
         self.route('/run/resetSystem', method='POST', callback=self.resetSystem)
         self.route('/run/state', method='GET', callback=self.getState)
+        self.route('/run/message', method='POST', callback=self.sendMessage)
 
         self.route('/kill', method='GET', callback=self.kill)
         self.route('/logs', method='GET', callback=self.getLog)
@@ -124,6 +125,14 @@ class RestServer(Bottle):
             "isRunning": self.__subprocess.isRunning(),
             "isPaused": self.isPaused
         }
+
+    def sendMessage(self):
+        msg = request.json
+
+        if self.__subprocess.sendMsgToSubprocess({ 'topic': msg['topic'], 'message': msg['message'] }):
+            return 'OK'
+        else:
+            abort(400, 'Failed to send the message to the MachineApp')
 
     def kill(self):
         self.__subprocess.terminate()

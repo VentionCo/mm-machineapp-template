@@ -26,6 +26,9 @@ class MachineAppState(ABC):
 
         self.__mqttTopicSubscriberList = []
 
+    def getMqttTopicSubscriberList(self):
+        return self.__mqttTopicSubscriberList
+
     def gotoState(self, state):
         '''
         Updates the MachineAppEngine to the provided state
@@ -41,6 +44,33 @@ class MachineAppState(ABC):
 
     def registerCallback(self, machineMotion: 'MachineMotion', ioName: str, callback):
         ''' 
+        Register a callback for a particular IO. Note that you should call removeCallback
+        when you are finished.
+
+        params:
+            machineMotion: MachineMotion
+                Machine whose MQTT topic you want to subscribe to
+
+            ioName: str
+                Friendly IO name that you would like to subscribe to
+
+            callback: func(topic: str, msg: str) -> void
+                Callback that gets called when we receive data on that topic
+        '''
+        mqttSubscriber = None
+        for subscriber in self.__mqttTopicSubscriberList:
+            if subscriber.getMachineMotion() == machineMotion:
+                mqttSubscriber = subscriber
+                break
+
+        if mqttSubscriber == None:
+            mqttSubscriber = MqttTopicSubscriber(machineMotion)
+            self.__mqttTopicSubscriberList.append(mqttSubscriber)
+
+        self.registerCallbackOnTopic(machineMotion, machineMotion.getInputTopic(ioName), callback)
+
+    def registerCallbackOnTopic(self, machineMotion: 'MachineMotion', topic: str, callback):
+        '''
         Register a callback for a particular topic. Note that you should call removeCallback
         when you are finished.
 
@@ -64,7 +94,7 @@ class MachineAppState(ABC):
             mqttSubscriber = MqttTopicSubscriber(machineMotion)
             self.__mqttTopicSubscriberList.append(mqttSubscriber)
 
-        mqttSubscriber.registerCallback(machineMotion.getInputTopic(ioName), callback)
+        mqttSubscriber.registerCallback(topic, callback)
 
     @abstractmethod
     def onEnter(self):
@@ -421,3 +451,12 @@ class BaseMachineAppEngine(ABC):
         '''
         self.logger.info('Stopping the MachineApp')
         self.__shouldStop = True
+
+    def receiveMessage(self, topic, msg):
+        '''
+        Processes a message received from the client.
+        '''
+        currentState = self.getCurrentState()
+        if currentState != None:
+            for subscriber in currentState.getMqttTopicSubscriberList():
+                subscriber.addToQueue(topic, msg)
