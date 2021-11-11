@@ -78,6 +78,9 @@ class MECH_GAIN:
     rack_pinion_mm_turn             = 157.08
     rack_pinion_v2_mm_turn          = 141.37
     electric_cylinder_mm_turn       = 6
+    belt_rack_mm_turn               = 125
+    enclosed_lead_screw_mm_turn     = 4
+    hd_roller_conveyor_mm_turn      = 123.3
 
 class STEPPER_MOTOR:
     steps_per_turn      = 200
@@ -90,22 +93,23 @@ class AUX_PORTS:
 
 class ENCODER_TYPE:
     real_time = "realtime-position"
-    stable = "stable-position"
+    stable    = "stable-position"
 
 class BRAKE_STATES:
-    locked = "locked"
+    locked   = "locked"
     unlocked = "unlocked"
-    unknown = "unknown"
+    unknown  = "unknown"
 
 class TUNING_PROFILES:
     DEFAULT = "default"
+    CONVEYOR_TURNTABLE = "conveyor_turntable"
 
 class CONTROL_LOOPS:
     OPEN_LOOP   = "open"
     CLOSED_LOOP = "closed"
 
 class POWER_SWITCH:
-    ON = "on"
+    ON  = "on"
     OFF = "off"
 
 class PUSH_BUTTON:
@@ -113,8 +117,12 @@ class PUSH_BUTTON:
         BLACK = 0
         WHITE = 1
     class STATE:
-        PUSHED = "pushed"
+        PUSHED   = "pushed"
         RELEASED = "released"
+class MOTOR_SIZE:
+    SMALL   = "Small Servo"
+    MEDIUM  = "Medium Servo"
+    LARGE   = "Large Servo"
 
 HARDWARE_MIN_HOMING_FEEDRATE = 500
 HARDWARE_MAX_HOMING_FEEDRATE = 8000
@@ -1179,7 +1187,7 @@ class MachineMotion(object):
 
         return
 
-    def configStepper(self, drive, mechGain, direction, motorCurrent, microSteps = MICRO_STEPS.ustep_8) :
+    def configStepper(self, drive, mechGain, direction, motorCurrent, microSteps = MICRO_STEPS.ustep_8, motorSize = MOTOR_SIZE.LARGE) :
         '''
         desc: Configures motion parameters as a stepper motor, for a single drive on the MachineMotion v2.
         params:
@@ -1198,6 +1206,10 @@ class MachineMotion(object):
             microSteps:
                 desc: The microstep setting of the drive.
                 type: Number from MICRO_STEPS class
+            motorSize:
+                desc: The size of the motor(s) connected to the specified drive(s)
+                type: String from the MOTOR_SIZE class
+                default: MOTOR_SIZE.LARGE
         note: Warning, changing the configuration can de-energize motors and thus cause unintended behaviour on vertical axes.
         compatibility: MachineMotion v2 only.
         exampleCodePath: configStepperServo.py
@@ -1209,9 +1221,9 @@ class MachineMotion(object):
             raise Exception("The drive should be a Number and not a List")
         loop = CONTROL_LOOPS.OPEN_LOOP
         tuningProfile = TUNING_PROFILES.DEFAULT
-        self.configAxis_v2(drive, mechGain, direction, motorCurrent, loop, microSteps, tuningProfile)
+        self.configAxis_v2(drive, mechGain, direction, motorCurrent, loop, microSteps, tuningProfile,_motorSize=motorSize)
 
-    def configServo(self, drives, mechGain, directions, motorCurrent, tuningProfile = TUNING_PROFILES.DEFAULT, parentDrive=None):
+    def configServo(self, drives, mechGain, directions, motorCurrent, tuningProfile = TUNING_PROFILES.DEFAULT, parentDrive=None,motorSize=MOTOR_SIZE.LARGE):
         '''
         desc: Configures motion parameters as a servo motor, for a single drive on the MachineMotion v2.
         params:
@@ -1235,6 +1247,10 @@ class MachineMotion(object):
                 desc: The parent drive of the multi-drive axis. The axis' home and end sensors must be connected to this drive.
                 type: Number
                 default: None
+            motorSize:
+                desc: The size of the motor(s) connected to the specified drive(s)
+                type: String from the MOTOR_SIZE class
+                default: MOTOR_SIZE.LARGE
         note: Warning, changing the configuration can de-energize motors and thus cause unintended behaviour on vertical axes.
         compatibility: MachineMotion v2 only.
         exampleCodePath: configStepperServo.py, configMultiDriveServo.py
@@ -1252,9 +1268,9 @@ class MachineMotion(object):
             microSteps = MICRO_STEPS.ustep_4
         else:
             raise Exception('Mechanical gain should be a positive value.')
-        self.configAxis_v2(drives, mechGain, directions, motorCurrent, loop, microSteps, tuningProfile,_parent=parentDrive)
+        self.configAxis_v2(drives, mechGain, directions, motorCurrent, loop, microSteps, tuningProfile, _parent = parentDrive, _motorSize = motorSize)
 
-    def configAxis_v2(self, drives, mechGain, directions, motorCurrent, loop, microSteps, tuningProfile, _parent=None):
+    def configAxis_v2(self, drives, mechGain, directions, motorCurrent, loop, microSteps, tuningProfile, _parent=None, _motorSize = MOTOR_SIZE.LARGE):
         if motorCurrent > MAX_MOTOR_CURRENT:
             print("Motor current value was clipped to the maximum (" + str(MAX_MOTOR_CURRENT) + "A).")
             motorCurrent = MAX_MOTOR_CURRENT
@@ -1264,6 +1280,7 @@ class MachineMotion(object):
         self._restrictInputValue("control loop type", loop, CONTROL_LOOPS)
         self._restrictInputValue("microSteps", microSteps, MICRO_STEPS)
         self._restrictInputValue("tuning profile", tuningProfile, TUNING_PROFILES)
+        self._restrictInputValue("motor Size", _motorSize, MOTOR_SIZE)
         if _parent!=None:
             self._restrictInputValue("parentDrive", _parent, AXIS_NUMBER)
 
@@ -1304,7 +1321,8 @@ class MachineMotion(object):
             "loop": loop,
             "microSteps": microSteps,
             "tuningProfile": tuningProfile,
-            "parent": _parent
+            "parent": _parent,
+            "motorSize":_motorSize
         }
         reply = self.myGCode.__sendConfigToSmartDrives__(_parent, json.dumps(payload))
         if "ok" not in reply:
@@ -2203,7 +2221,7 @@ class MachineMotion(object):
                 return False
 
         return False
-        
+
     # Custom MachineApp template-specific code
     def addMqttCallback(self, func):
         if not func in self.mqttCallbacks:
