@@ -402,6 +402,7 @@ class MachineMotion(object):
         self.areSmartDrivesReady = None
 
         # MQTT
+        self.mqttCallbacks = []                         # Custom MachineApp template variable
         self.myMqttClient = None
         self.myMqttClient = mqtt.Client()
         self.myMqttClient.on_connect = self.__onConnect
@@ -433,6 +434,8 @@ class MachineMotion(object):
         self.u_step = ["Axis 0 does not exist", "notInitialized", "notInitialized", "notInitialized", "notInitialized"]
         self.mech_gain = ["Axis 0 does not exist", "notInitialized", "notInitialized", "notInitialized", "notInitialized"]
         self.direction = ["Axis 0 does not exist", "notInitialized", "notInitialized", "notInitialized", "notInitialized"]
+
+        self.__registeredInputMap = {}                      # Custom MachineApp template variable
 
         return
 
@@ -2072,6 +2075,10 @@ class MachineMotion(object):
     def __onMessage(self, client, userData, msg):
         # try/except to make _onMessage robust to garbage MQTT messages
         try:
+            # Custom callback list for MachineApps
+            for callback in self.mqttCallbacks:
+              	callback(msg.topic, msg.payload.decode('utf-8'))
+
             topicParts = msg.topic.split('/')
             if topicParts[0]=="devices":
                 device = int( topicParts[2] )
@@ -2496,6 +2503,23 @@ class MachineMotion(object):
                 return False
 
         return False
+
+    # Custom MachineApp template-specific code
+    def addMqttCallback(self, func):
+        if not func in self.mqttCallbacks:
+            self.mqttCallbacks.append(func)
+
+    def removeMqttCallback(self, func):
+        self.mqttCallbacks.remove(func)
+
+    def registerInput(self, name, digitalIo, pin):
+        self.__registeredInputMap[name] = 'devices/io-expander/' + str(digitalIo) + '/digital-input/' + str(pin)
+
+    def getInputTopic(self, name):
+        if not name in self.__registeredInputMap:
+            return None
+
+        return self.__registeredInputMap[name]
 
 class MachineMotionV2(MachineMotion):
     '''skip
