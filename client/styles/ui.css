@@ -5,29 +5,30 @@
     justify-content: center;
     align-items: center;
     padding: 1rem;
+    position: relative;
 }
 
-.distance-travelled-container {
-    width: 50%;
-    padding: 1rem;
+.buttons-container {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    padding: inherit;
+    bottom: 0;
 }
 
-.distance-travelled-container > label {
+.left-button {
+    margin-right: 4px
+}
+
+.instruction-text {
+    font-size: larger;
     font-weight: bold;
-    width: 50%;
-    display: inline-block;
+    text-align: center;
 }
 
-.distance-travelled-container > span {
-    width: 50%;
-    display: inline-block;
-    text-align: right;
-}
-
-.light-container {
-    padding: 1rem;
-}
-
-.light-container > label {
-    font-weight: bold;
+.instruction-counter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: inherit;
 }

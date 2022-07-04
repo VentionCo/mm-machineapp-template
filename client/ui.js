@@ -3,14 +3,13 @@
 /**
  * Populates the configuration editor in the 'Execute' panel with this default data
  */
-function getDefaultConfiguration() {
+ function getDefaultConfiguration() {
     return {
-        fullSpeed: 150,
-        slowSpeed: 100,
-        greenTimer: 10,
-        yellowTimer: 2,
-        redTimer: 2,
-        pedestrianTimer: 20
+        beltSpeed: 100,
+        beltAcceleration: 100,
+        sawToZero: 100,
+        instructions: [200, 100, 300],
+        instructionIndex: 0,
     }
 }
 
@@ -18,31 +17,16 @@ function getDefaultConfiguration() {
  * Constructs the editor that you see above the play/stop buttons in the 'Execute' panel
  * @param {Object} pConfiguration editable configuration 
  */
-function buildEditor(pConfiguration) {
-    const lEditorWrapper = $('<div>').addClass('configuration-editor'),
-        lFullSpeedEitor = numericInput('Conveyor Full Speed', pConfiguration.fullSpeed, function(pValue) {
-            pConfiguration.fullSpeed = pValue;
-        }).appendTo(lEditorWrapper),
-        lSlowSpeedEditor = numericInput('Conveyor slow Speed', pConfiguration.slowSpeed, function(pValue) {
-            pConfiguration.slowSpeed = pValue;
-        }).appendTo(lEditorWrapper),
-        lGreenTimer = numericInput('Green Light Timer', pConfiguration.greenTimer, function(pValue) {
-            pConfiguration.greenTimer = pValue;
-        }).appendTo(lEditorWrapper),
-        lYellowTimer = numericInput('Yellow Light Timer', pConfiguration.yellowTimer, function(pValue) {
-            pConfiguration.yellowTimer = pValue;
-        }).appendTo(lEditorWrapper),
-        lRedTimer = numericInput('Red Light Timer', pConfiguration.redTimer, function(pValue) {
-            pConfiguration.redTimer = pValue;
-        }).appendTo(lEditorWrapper),
-        lPedestrianTimer = numericInput('Pedestrian Light Timer', pConfiguration.pedestrianTimer, function(pValue) {
-            pConfiguration.pedestrianTimer = pValue;
+ function buildEditor(pConfiguration) {
+    const lEditorWrapper = $('<div>').addClass('configuration-editor');
+        beltSpeedEditor = numericInput('Belt Speed', pConfiguration.beltSpeed, function(pValue) {
+            pConfiguration.beltSpeed = pValue;
         }).appendTo(lEditorWrapper);
-        numericInput('Pedestrian Light Timer', pConfiguration.pedestrianTimer, function(pValue) {
-            pConfiguration.pedestrianTimer = pValue;
-        }).appendTo(lEditorWrapper),
-        numericInput('Pedestrian Light Timer', pConfiguration.pedestrianTimer, function(pValue) {
-            pConfiguration.pedestrianTimer = pValue;
+        beltAccelerationEditor = numericInput('Belt Acceleration', pConfiguration.beltAcceleration, function(pValue) {
+            pConfiguration.beltAcceleration = pValue;
+        }).appendTo(lEditorWrapper);
+        sawToZeroEditor = numericInput('Saw to 0 Length', pConfiguration.sawToZero, function(pValue) {
+            pConfiguration.sawToZero = pValue;
         }).appendTo(lEditorWrapper);
 
     return lEditorWrapper;
@@ -92,108 +76,30 @@ function onNotificationReceived(pLevel, pMessageStr, pMessagePayload) {
         lCustomContainer.empty();
     } else if (pLevel === 'app_start') { // Refresh the custom container when we start the app
         lCustomContainer.empty();
-        const lRequestWalkButton = button('Request Pedestrian Crossing', function() { sendSoftwareMessage('software_button', 'true'); }).appendTo(lCustomContainer),
-            lLightContainer = $('<div>').addClass('h_layout').appendTo(lCustomContainer),
-            lCreateLightIndicator = function(pName) {
-                const lLightIndicator = $('<div>').addClass('v_layout').addClass('light-container'),
-                    lLabel = $('<label>').appendTo(lLightIndicator).text(pName),
-                    lRedLightIndicator = $('<div>').appendTo(lLightIndicator)
-                        .append($('<input>').attr('type', 'radio').addClass('red-light-indicator').prop('checked', true))
-                        .append($('<label>').text('Red')),
-                    lYellowLightIndicator = $('<div>').appendTo(lLightIndicator)
-                        .append($('<input>').attr('type', 'radio').addClass('yellow-light-indicator'))
-                        .append($('<label>').text('Yellow')),
-                    lGreenLightIndicator  = $('<div>').appendTo(lLightIndicator)
-                        .append($('<input>').attr('type', 'radio').addClass('green-light-indicator'))
-                        .append($('<label>').text('Green'));
-
-                return lLightIndicator;
-            },
-            lCreatePedestrianLight = function() {
-                const lLightIndicator = $('<div>').addClass('v_layout').addClass('light-container'),
-                    lLabel = $('<label>').appendTo(lLightIndicator).text('Pedestrian Light'),
-                    lNoGo = $('<div>').appendTo(lLightIndicator)
-                        .append($('<input>').attr('type', 'radio').addClass('no-go-indicator').prop('checked', true))
-                        .append($('<label>').text('No-go')),
-                    lGo = $('<div>').appendTo(lLightIndicator)
-                        .append($('<input>').attr('type', 'radio').addClass('go-indicator'))
-                        .append($('<label>').text('Go'));
-
-                return lLightIndicator;
-            },
-            lCreateButtonDownStatus = function() {
-                const lContainer = $('<div>').addClass('v_layout').addClass('light-container'),
-                    lLabel = $('<label>').appendTo(lContainer).text('Button State'),
-                    lNo = $('<div>').appendTo(lContainer)
-                        .append($('<input>').attr('type', 'radio').addClass('pedestrian-btn-no').prop('checked', true))
-                        .append($('<label>').text('Pedestrian Btn Not Clicked')),
-                    lYes = $('<div>').appendTo(lContainer)
-                        .append($('<input>').attr('type', 'radio').addClass('pedestrian-btn-yes'))
-                        .append($('<label>').text('Pedestrian Btn Clicked'));
-
-                return lContainer;
-            },
-            lHorizontalLightIndicator = lCreateLightIndicator('Horizontal Traffic Light').appendTo(lLightContainer).attr('id', 'horizontal-light-indicator'),
-            lVerticalLightIndicator = lCreateLightIndicator('Vertical Traffic Light').appendTo(lLightContainer).attr('id', 'vertical-light-indicator'),
-            lPedestrianLight = lCreatePedestrianLight().appendTo(lLightContainer).attr('id', 'pedestrian-light-indicator'),
-            lButtonDownStatus = lCreateButtonDownStatus().attr('id', 'button-state-indicator').appendTo(lLightContainer);
+        console.log("WE ARE HERE");
+        const instructionCounter = textbox('Instruction Counter', `${getDefaultConfiguration().instructionIndex + 1} / ${getDefaultConfiguration().instructions.length}`).addClass('instruction-counter').appendTo(lCustomContainer);
+        const textContent = $('<div>').addClass('instruction-text').appendTo(lCustomContainer);
+        const buttonsContainer = $('<div>').addClass('buttons-container').appendTo(lCustomContainer);
+        const prevStepButton = button('Prev Step', function() { sendSoftwareMessage('software_button', 'prevStep'); }).addClass('left-button').appendTo(buttonsContainer);
+        const nextStepButton = button('Next Step', function() { sendSoftwareMessage('software_button', 'nextStep'); }).appendTo(buttonsContainer);
+        
     }
-
+    
     if (pMessagePayload == undefined) {
         return;
     }
 
-    if (pLevel === 'io_state') {
-        if (pMessagePayload.name === 'push_button_1') {
-            $('#button-state-indicator').find('.pedestrian-btn-no').prop('checked', pMessagePayload.value !== 'true');
-            $('#button-state-indicator').find('.pedestrian-btn-yes').prop('checked', pMessagePayload.value === 'true');
+    if (pMessageStr === 'InstructionIndexChange'){
+        if (pMessagePayload.index >= pMessagePayload.instructionsLength) {
+            return;
         }
-        return;
+        const counterInput = lCustomContainer.find('.instruction-counter').children().last();
+        counterInput.val(`${pMessagePayload.index + 1} / ${pMessagePayload.instructionsLength}`);
     }
-
-    const lDirection = pMessagePayload.direction,
-        lColor = pMessagePayload.color,
-        speed = pMessagePayload.speed,
-        lPedestriansCrossing = pMessagePayload.pedestriansCrossing;
-        
-    if (lDirection && lColor) {
-        let lTrafficLight = undefined;
-
-        switch (lDirection) {
-            case 'horizontal': {
-                lTrafficLight = $('#horizontal-light-indicator');
-                break;
-            }
-            case 'vertical': {
-                lTrafficLight = $('#vertical-light-indicator');
-                break;
-            }
-        }
-
-        if (lTrafficLight) {
-            switch (lColor) {
-                case 'green': {
-                    lTrafficLight.find('.green-light-indicator').prop('checked', true);
-                    lTrafficLight.find('.red-light-indicator').prop('checked', false);
-                    lTrafficLight.find('.yellow-light-indicator').prop('checked', false);
-                    break;
-                }
-                case 'yellow': {
-                    lTrafficLight.find('.green-light-indicator').prop('checked', false);
-                    lTrafficLight.find('.red-light-indicator').prop('checked', false);
-                    lTrafficLight.find('.yellow-light-indicator').prop('checked', true);
-                    break;
-                }
-                case 'red': {
-                    lTrafficLight.find('.green-light-indicator').prop('checked', false);
-                    lTrafficLight.find('.red-light-indicator').prop('checked', true);
-                    lTrafficLight.find('.yellow-light-indicator').prop('checked', false);
-                    break;
-                }
-            }
-        }
-    } else if (lPedestriansCrossing !== undefined) {
-        $('#pedestrian-light-indicator').find('.no-go-indicator').prop('checked', !lPedestriansCrossing);
-        $('#pedestrian-light-indicator').find('.go-indicator').prop('checked', lPedestriansCrossing)
+    else if (pMessageStr === 'textUpdate') {
+        const textDiv = lCustomContainer.find('.instruction-text')
+        textDiv.empty()
+        textDiv.text(pMessagePayload.text);
     }
+    
 }
