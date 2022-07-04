@@ -1,5 +1,8 @@
 #/usr/bin/python3
 
+import json
+
+from yaml import load
 from env import env
 import logging
 import time
@@ -18,6 +21,17 @@ if env.IS_DEVELOPMENT:
 else:
     from internal.machine_motion import MachineMotion
 
+class Instruction():
+    def __init__(self, instType: str, extrusionType: str, extrusionLength: int, units: str, cutLength: int=None):
+        self.instType = instType
+        self.extrusionType = extrusionType
+        self.extrusionLength = extrusionLength
+        self.units = units
+        self.cutLength = cutLength
+
+    def toString(self):
+        return self.instType + " " + self.extrusionType + " " + str(self.extrusionLength) + " " + self.units + " " + str(self.cutLength)
+
 class MachineAppEngine(BaseMachineAppEngine):
     ''' Manages and orchestrates your MachineAppStates '''
 
@@ -34,8 +48,8 @@ class MachineAppEngine(BaseMachineAppEngine):
         '''
         stateDictionary = {
             'start': StartState(self),
-            'move': MoveState(self),
-            'cut': CutState(self),
+            'machineAction': MachineActionState(self),
+            'userAction': UserActionState(self),
             'end': EndState(self)
         }
 
@@ -62,6 +76,31 @@ class MachineAppEngine(BaseMachineAppEngine):
         self.logger.info('Running initialization')
         self.primaryMachineMotion = MachineMotion('127.0.0.1', machineMotionHwVersion=MACHINEMOTION_HW_VERSIONS.MMv2)
         self.primaryMachineMotion.configAxis_v2(1, 208, 'positive', 10, 'closed', 4, 'default')
+        
+        instructionFile = open('ExamplePayload.json')
+        instructionJSON = json.load(instructionFile)
+
+        self.instructions = self._payloadToInstructions(instructionJSON)
+    
+    def _payloadToInstructions(self, payloadJSON):
+        loadedInstructions = payloadJSON['instructions']
+        instructionList = []
+        for key in loadedInstructions:
+            extrusionType = "ST-EXT-" + key
+            allCutsForType = loadedInstructions[key]
+            for singleExtrusionCutList in allCutsForType:
+                remExtrusionLength = singleExtrusionCutList['extension_to_be_consumed']
+                thisExtrusionCuts = singleExtrusionCutList['cuts']
+                units = singleExtrusionCutList['measurements']
+                instructionList.append(Instruction('grab', extrusionType, remExtrusionLength, units))
+                for cut in thisExtrusionCuts:
+                    cutLength = int(cut)
+                    instructionList.append(Instruction('cut', extrusionType, remExtrusionLength, units, cutLength))
+                    remExtrusionLength -= cutLength
+                instructionList.append(Instruction('scrap', extrusionType, remExtrusionLength, units))
+        return instructionList
+
+
 
 
         
@@ -109,7 +148,7 @@ class StartState(MachineAppState):
 
     def _setStartIndex(self, index):
         self.configuration['instructionIndex'] = index
-        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.configuration['instructions'])})
+        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.engine.instructions)})
 
     def onEnter(self):
         self.logger.info("Entered start state")
@@ -118,57 +157,54 @@ class StartState(MachineAppState):
         def onSoftwareClick(topic, message):
             if (message == 'nextStep'):
                 self._setStartIndex(0)
-                self.gotoState('move')
+                self.gotoState('machineAction')
 
         self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'software_button', onSoftwareClick)
 
-class MoveState(MachineAppState):
-
-    
-
+class MachineActionState(MachineAppState):
     def __init__(self, engine):
         super().__init__(engine)
         self.__machineMotion = self.engine.primaryMachineMotion
         self.__axis = 1
 
     def onEnter(self):
-        newPos = self.configuration['instructions'][self.configuration['instructionIndex']]
-        newText = "Moving to cut length: %d" % newPos
-        _sendTextUpdate(newText)
-        self.logger.info("Move to %d" % newPos)
-        self.__machineMotion.emitHomeAll()
-        self.__machineMotion.setPosition(self.__axis, newPos)
-        self.gotoState('cut')
+        curInstruction = self.engine.instructions[self.configuration['instructionIndex']]
+        if (curInstruction.instType == 'cut'):
+            newText = "Moving to cut length: %d" % curInstruction.cutLength
+            _sendTextUpdate(newText)
+            self.logger.info("Move to %d" % curInstruction.cutLength)
+            self.__machineMotion.emitHomeAll()
+            self.__machineMotion.setPosition(self.__axis, curInstruction.cutLength)
+        self.gotoState('userAction')
          
 
-class CutState(MachineAppState):
+class UserActionState(MachineAppState):
 
     def __init__(self, engine):
         super().__init__(engine)
     
     def _updateIndex(self, increment):
         self.configuration['instructionIndex'] += increment
-        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.configuration['instructions'])})
+        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.engine.instructions)})
 
     def onEnter(self):
-        sideToTake = 'right' if self.configuration['instructionIndex'] % 2 == 0 else 'left'
-        newText = "Perform the cut and take the %s piece" % sideToTake
+        curInstruction = self.engine.instructions[self.configuration['instructionIndex']]
+        newText = curInstruction.toString()
         _sendTextUpdate(newText)
         def onSoftwareClick(topic, message):
             if (message == 'nextStep'):
                 self._updateIndex(1)
-                if self.configuration['instructionIndex'] >= len(self.configuration['instructions']):
+                if self.configuration['instructionIndex'] >= len(self.engine.instructions):
                     self.gotoState('end')
                     return
-                self.gotoState('move')
+                self.gotoState('machineAction')
             elif (message == 'prevStep'):
                 if self.configuration['instructionIndex'] > 0:
                     self._updateIndex(-1)
-                self.gotoState('move')
+                self.gotoState('machineAction')
 
 
         self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'software_button', onSoftwareClick)
-        self.logger.info("Entered cut and take %s state" % sideToTake)
 
 class EndState(MachineAppState):
     def __init__(self, engine):
@@ -176,7 +212,7 @@ class EndState(MachineAppState):
 
     def _decrementIndex(self):
         self.configuration['instructionIndex'] -= 1
-        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.configuration['instructions'])})
+        sendNotification(NotificationLevel.INFO, 'InstructionIndexChange', {'index': self.configuration['instructionIndex'], 'instructionsLength': len(self.engine.instructions)})
 
     def onEnter(self):
         newText = "Cutting complete! Thank you!"
@@ -184,7 +220,7 @@ class EndState(MachineAppState):
         def onSoftwareClick(topic, message):
             if (message == 'prevStep'):
                 self._decrementIndex()
-                self.gotoState('move')
+                self.gotoState('machineAction')
                 
         self.registerCallbackOnTopic(self.engine.primaryMachineMotion, 'software_button', onSoftwareClick)
         self.logger.info("Entered end state")

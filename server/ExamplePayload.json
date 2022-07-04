@@ -1,0 +1,273 @@
+{
+    "instructions": {
+        "101": [],
+        "001": [
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1395",
+                    "0855"
+                ],
+                "measurements": "mm",
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1395",
+                    "0855"
+                ],
+                "measurements": "mm",
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1395",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090",
+                    "0090"
+                ],
+                "measurements": "mm",
+                "scrap": 40
+            }
+        ],
+        "002": [
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "2115"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 135,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "2115"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 135,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "2115"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 135,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "2115"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 135,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1890"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 360,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1440"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 810,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1440"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 810,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1395"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 855,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1395"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 855,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1350"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 900,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1350"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 900,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1350"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 900,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1350"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 900,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1350"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 900,
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1125",
+                    "1125"
+                ],
+                "measurements": "mm",
+                "scrap": 35
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1125",
+                    "1080"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 45,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1080",
+                    "1080"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 90,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1080",
+                    "1080"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 90,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1080",
+                    "1035"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 135,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1035",
+                    "1035"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 180,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1035",
+                    "1035"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 180,
+                "scrap": 30
+            },
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1035"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 1215,
+                "scrap": 35
+            }
+        ],
+        "005": [
+            {
+                "extension_to_be_consumed": 2295,
+                "cuts": [
+                    "1980"
+                ],
+                "measurements": "mm",
+                "final_spare_cut": 270,
+                "scrap": 35
+            }
+        ]
+    },
+    "overview": {
+        "total_instructions": 26,
+        "total_cuts": 66,
+        "total_cuts_by_spec": {
+            "001": 14,
+            "002": 50,
+            "005": 2
+        },
+        "required_2295_extrusion_totals": {
+            "001": 3,
+            "002": 22,
+            "005": 1
+        }
+    }
+}

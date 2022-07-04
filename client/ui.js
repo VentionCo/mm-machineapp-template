@@ -8,7 +8,7 @@
         beltSpeed: 100,
         beltAcceleration: 100,
         sawToZero: 100,
-        instructions: [200, 100, 300],
+        instructions: [],
         instructionIndex: 0,
     }
 }
