@@ -94,19 +94,6 @@
         });
     }
 
-    function lSetEstop() {
-        return fetch('/run/estop', { method: 'POST' }).then(function(pResponse) {
-            if (pResponse.status === 200) {
-                return true;
-            } else {
-                return false;
-            }
-        }).catch(function(pReason) {
-            console.exception('Failed to process request', pReason);
-            return false;
-        });
-    }
-
     function lReleaseEstop() {
         return fetch('/run/releaseEstop', { method: 'POST' }).then(function(pResponse) {
             if (pResponse.status === 200) {
@@ -144,7 +131,6 @@
      */
     function main() {
         const lIsPendant = window.location.hostname === '192.168.5.2';
-        $('#estop-button').on('click', onEstopClicked)
         $('#app-launcher-button').on('click', onAppLauncherClicked);
         
         showContent();
@@ -389,17 +375,6 @@
     }
 
      // Estop functionality
-    function onEstopClicked() {
-        console.log('Estop button clicked.');
-        lSetEstop().then(function(pSuccess) {
-            if (pSuccess) {
-                console.log('Successfully sent the estop request');
-            } else {
-                console.error('Failed to estop');
-            }
-        })
-    }
-
     function onEstopSet() {
         if ($('#estop-modal').length > 0) {
             return;
