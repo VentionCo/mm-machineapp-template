@@ -68,9 +68,19 @@ class MachineAppEngine(BaseMachineAppEngine):
         
         # Create and configure your machine motion instances
         self.primaryMachineMotion = MachineMotion('127.0.0.1', machineMotionHwVersion=MACHINEMOTION_HW_VERSIONS.MMv2)
-        self.primaryMachineMotion.configAxis_v2(1, 150, "positive", 5, "closed", 2, "default")
-        self.primaryMachineMotion.configAxis_v2(2, 150, "positive", 5, "closed", 2, "default")
-        self.primaryMachineMotion.configAxis_v2(3, 150, "positive", 5, "closed", 2, "default")
+        # Expected configuration for this example (via Control Center)
+        # Axis 1
+        #   Drive Number(s): 1
+        #   Axis Type: Timing Belt
+        #   Motor Size: Large
+        # Axis 2
+        #   Drive Number(s): 2
+        #   Axis Type: Timing Belt
+        #   Motor Size: Large
+        # Axis 3
+        #   Drive Number(s): 3
+        #   Axis Type: Timing Belt
+        #   Motor Size: Large
         self.primaryMachineMotion.registerInput('push_button_1', 1, 1)  # Register an input with the provided name
 
         self.primaryIoMonitor = IOMonitor(self.primaryMachineMotion)
