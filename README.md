@@ -19,7 +19,7 @@ The purpose of this project is to provide users with a framework upon which they
 ## MQTT Broker Setup (Mosquitto)
 ### Windows
 1. Download the exe from here: https://mosquitto.org/download/
-2. Locate your `mosqutto.conf`. This will be `C:\Program Files\mosquitto\mosquitto.conf` or `C:\Program Files (x86)\mosquitto\mosquitto.conf`.
+2. Locate your `mosquitto.conf`. This will be `C:\Program Files\mosquitto\mosquitto.conf` or `C:\Program Files (x86)\mosquitto\mosquitto.conf`.
 3. Insert the following at the beginning of the "Listeners" section:
 ```txt
 allow_anonymous true
